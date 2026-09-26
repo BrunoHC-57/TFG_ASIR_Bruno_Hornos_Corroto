@@ -1,9 +1,12 @@
 import random
 import time
+
+#Colores para las letras
 from colorama import Fore, Style, init
 
 init(autoreset=True)
 
+#Datos
 nombre = "Cinta_1"
 estado = "Funcionando"
 temperaturas = 60.0
@@ -11,6 +14,8 @@ velocidad = 1.5
 horas = 124.0
 produccion = 0
 averia = False
+
+#Inicio
 
 print(f"iniciando simulacion de: ", nombre)
 print("-----------------------------------------")
@@ -25,7 +30,10 @@ while True:
         if temperaturas > 80:
             estado = "ERROR"
             velocidad = 0
+            #Aviso de averia
             averia = True
+            
+            # msg de alerta de fallo
             print()
             print(Fore.RED + "======================================================")
             print(Fore.YELLOW + f"⚠ AVERIA DETECTADA EN {nombre}")
@@ -54,7 +62,7 @@ while True:
             color_estado = Fore.YELLOW
         else:
             color_estado = Fore.RED
-
+        
         print(
             f"{nombre} | "
             f"{color_estado}{estado}{Style.RESET_ALL} | "
