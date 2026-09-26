@@ -24,7 +24,7 @@ print("-----------------------------------------")
 while True:
     #Control de averia
     if not averia:
-        temperaturas += random.uniform(0, 5)  
+        temperaturas += random.uniform(-1, 2)  
 
         #Control de temperatura
         if temperaturas > 80:
