@@ -1,5 +1,6 @@
 import random
 import time
+import paho.mqtt.client as mqtt
 
 #Colores para las letras
 from colorama import Fore, Style, init
@@ -14,6 +15,9 @@ velocidad = 1.5
 horas = 124.0
 produccion = 0
 averia = False
+#creacion de cliente
+cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+cliente.connect("localhost", 1883, 60)
 
 #Inicio
 
@@ -62,6 +66,12 @@ while True:
             color_estado = Fore.YELLOW
         else:
             color_estado = Fore.RED
+
+        #Publicacion de los datos con mqtt
+        cliente.publish(
+            "smartfactory/cinta1/temperatura",
+            f"{temperaturas:.1f}"
+        )
         
         print(
             f"{nombre} | "
