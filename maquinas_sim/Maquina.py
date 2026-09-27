@@ -1,5 +1,6 @@
 import random
 import time
+import json
 import paho.mqtt.client as mqtt
 
 #Colores para las letras
@@ -67,10 +68,23 @@ while True:
         else:
             color_estado = Fore.RED
 
-        #Publicacion de los datos con mqtt
+        #Guardado de datos 
+        datos = {
+            "Nombre": nombre,
+            "Estado": estado,
+            "Temperatura": round(temperaturas, 1),
+            "Velocidad": round(velocidad, 2),
+            "Horas": round(horas, 1),
+            "Produccion": produccion
+        }
+        
+        #Se pasa a json
+        mensaje_json = json.dumps(datos)
+
+        #Se publica el json
         cliente.publish(
-            "smartfactory/cinta1/temperatura",
-            f"{temperaturas:.1f}"
+            "smartfactory/cinta1/telemetria",
+            mensaje_json
         )
         
         print(
