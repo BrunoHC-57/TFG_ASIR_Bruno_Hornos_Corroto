@@ -16,9 +16,20 @@ velocidad = 1.5
 horas = 124.0
 produccion = 0
 averia = False
+
+#Recepcion de comandos por mqtt
+def recibir_comando(cliente, userdata, msg):
+    comando = msg.payload.decode()
+
+    print(f"Comando recibido: {comando}")
+
+
 #creacion de cliente
 cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+cliente.on_message = recibir_comando
 cliente.connect("localhost", 1883, 60)
+cliente.subscribe("smartfactory/cinta1/comandos")
+cliente.loop_start()
 
 #Inicio
 
@@ -77,7 +88,7 @@ while True:
             "Horas": round(horas, 1),
             "Produccion": produccion
         }
-        
+
         #Se pasa a json
         mensaje_json = json.dumps(datos)
 
@@ -86,7 +97,7 @@ while True:
             "smartfactory/cinta1/telemetria",
             mensaje_json
         )
-        
+
         print(
             f"{nombre} | "
             f"{color_estado}{estado}{Style.RESET_ALL} | "
