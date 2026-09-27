@@ -19,9 +19,20 @@ averia = False
 
 #Recepcion de comandos por mqtt
 def recibir_comando(cliente, userdata, msg):
-    comando = msg.payload.decode()
+    #avilita modificar variables fuera de la funcion
+    global averia, estado, temperaturas, velocidad
 
+    #decodificacion de que comando entra 
+    comando = msg.payload.decode()
     print(f"Comando recibido: {comando}")
+
+    if comando == "reset" and averia:
+        averia = False
+        estado = "Funcionando"
+        temperaturas = 60.0
+        velocidad = 1.5
+
+        print(Fore.GREEN + "Maquina reiniciada correctamente")
 
 
 #creacion de cliente
