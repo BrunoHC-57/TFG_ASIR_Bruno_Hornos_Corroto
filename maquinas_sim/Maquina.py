@@ -26,13 +26,15 @@ def recibir_comando(cliente, userdata, msg):
     comando = msg.payload.decode()
     print(f"Comando recibido: {comando}")
 
-    if comando == "reset" and averia:
+    if comando == "RESET" and averia:
         averia = False
         estado = "Funcionando"
         temperaturas = 60.0
         velocidad = 1.5
 
+        print("----------------------------------")
         print(Fore.GREEN + "Maquina reiniciada correctamente")
+        print("----------------------------------")
 
 
 #creacion de cliente
@@ -44,8 +46,9 @@ cliente.loop_start()
 
 #Inicio
 
-print(f"iniciando simulacion de: ", nombre)
-print("-----------------------------------------")
+print(Fore.GREEN + "-----------------------------------------")
+print(Fore.GREEN + f"iniciando simulacion de: ", nombre)
+print(Fore.GREEN + "-----------------------------------------")
 
 #bucle para que varien automaticamente los parametros de funcionamiento de la maquina para simular un funcionamiento real que pueda dar fallos.
 while True:
