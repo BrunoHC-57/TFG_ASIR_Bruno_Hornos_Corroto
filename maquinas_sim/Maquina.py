@@ -26,7 +26,7 @@ def recibir_comando(cliente, userdata, msg):
     comando = msg.payload.decode()
     print(f"Comando recibido: {comando}")
 
-    if comando == "RESET" and averia:
+    if comando == "RESET" and averia:    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
         averia = False
         estado = "Funcionando"
         temperaturas = 60.0
