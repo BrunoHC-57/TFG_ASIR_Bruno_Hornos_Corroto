@@ -11,7 +11,7 @@ init(autoreset=True)
 #Datos
 class Maquina:          #Clase que representa la maquina
 
-    def __init__(self,nombre):
+    def __init__(self, nombre, identificador):
         self.nombre = nombre
         self.identificador = identificador
         self.estado = "Funcionando"
@@ -66,22 +66,33 @@ class Maquina:          #Clase que representa la maquina
 
 
 #Maquinas:
-cinta1 = Maquina("Cinta_1, cinta1")
+cinta1 = Maquina("Cinta_1", "cinta1")
+cinta2 = Maquina("Cinta_2", "cinta2")
+
+maquinas = {
+    cinta1.identificador: cinta1,
+    cinta2.identificador: cinta2
+}
 
 #Recepcion de comandos por mqtt
 def recibir_comando(cliente, userdata, msg):
     #decodificacion de que comando entra 
     comando = msg.payload.decode()
-    print(f"Comando recibido: {comando}")
 
-    if comando == "RESET":    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
-        cinta1.reseteo()
+    #Identificar maquina:
+    partes = msg.topic.split("/")
+    identificador = partes[1]
+    print(f"Comando para {identificador}: {comando}")
+    if identificador in maquinas:
+        maquina = maquinas[identificador]    
+        if comando == "RESET":    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
+            maquina.reseteo()
 
 #creacion de cliente
 cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 cliente.on_message = recibir_comando
 cliente.connect("localhost", 1883, 60)
-cliente.subscribe("smartfactory/{cinta1.identificador}/comandos")
+cliente.subscribe(f"smartfactory/+/comandos")
 cliente.loop_start()
 
 #Inicio
@@ -92,49 +103,50 @@ print(Fore.GREEN + "-----------------------------------------")
 
 #bucle para que varien automaticamente los parametros de funcionamiento de la maquina para simular un funcionamiento real que pueda dar fallos.
 while True:
-    #Control de averia
-    if not cinta1.averia:
-        cinta1.temperaturas += random.uniform(-1, 2)  
+    for maquina in maquinas.values():
+        #Control de averia
+        if not maquina.averia:
+            maquina.temperaturas += random.uniform(-1, 2)  
 
-        cinta1.temp_comp()
+            maquina.temp_comp()
 
-        cinta1.parada_emergencia()
+            maquina.parada_emergencia()
 
-        #Cambio de color segun el estado de la maquina
+            #Cambio de color segun el estado de la maquina
 
-        if cinta1.estado == "Funcionando":
-            color_estado = Fore.GREEN
-        elif cinta1.estado == "WARNING":
-            color_estado = Fore.YELLOW
-        else:
-            color_estado = Fore.RED
+            if maquina.estado == "Funcionando":
+                color_estado = Fore.GREEN
+            elif maquina.estado == "WARNING":
+                color_estado = Fore.YELLOW
+            else:
+                color_estado = Fore.RED
 
         #Guardado de datos 
-        datos = {
-            "Nombre": cinta1.nombre,
-            "Estado": cinta1.estado,
-            "Temperatura": round(cinta1.temperaturas, 1),
-            "Velocidad": round(cinta1.velocidad, 2),
-            "Horas": round(cinta1.horas, 1),
-            "Produccion": cinta1.produccion
-        }
+            datos = {
+                "Nombre": maquina.nombre,
+                "Estado": maquina.estado,
+                "Temperatura": round(maquina.temperaturas, 1),
+                "Velocidad": round(maquina.velocidad, 2),
+                "Horas": round(maquina.horas, 1),
+                "Produccion": maquina.produccion
+            }
 
-        #Se pasa a json
-        mensaje_json = json.dumps(datos)
+            #Se pasa a json
+            mensaje_json = json.dumps(datos)
 
-        #Se publica el json
-        cliente.publish(
-            "smartfactory/{cinta1.identificador}/telemetria",
-            mensaje_json
-        )
+            #Se publica el json
+            cliente.publish(
+                f"smartfactory/{maquina.identificador}/telemetria",
+                mensaje_json
+            )
 
-        print(
-            f"{cinta1.nombre} | "
-            f"{color_estado}{cinta1.estado}{Style.RESET_ALL} | "
-            f"Temperatura: {cinta1.temperaturas:.1f} ºC | "
-            f"Velocidad: {cinta1.velocidad:.2f} m/s | "
-            f"Horas: {cinta1.horas:.1f} | "
-            f"Produccion: {cinta1.produccion} | "
-        )
+            print(
+                f"{maquina.nombre} | "
+                f"{color_estado}{maquina.estado}{Style.RESET_ALL} | "
+                f"Temperatura: {maquina.temperaturas:.1f} ºC | "
+                f"Velocidad: {maquina.velocidad:.2f} m/s | "
+                f"Horas: {maquina.horas:.1f} | "
+                f"Produccion: {maquina.produccion} | "
+            )
 
     time.sleep(2)
