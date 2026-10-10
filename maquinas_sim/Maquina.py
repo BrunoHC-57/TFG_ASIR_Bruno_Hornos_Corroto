@@ -12,7 +12,8 @@ init(autoreset=True)
 class Maquina:          #Clase que representa la maquina
 
     def __init__(self,nombre):
-        self.nombre = "Cinta_1"
+        self.nombre = nombre
+        self.identificador = identificador
         self.estado = "Funcionando"
         self.temperaturas = 60.0
         self.velocidad = 1.5
@@ -50,11 +51,22 @@ class Maquina:          #Clase que representa la maquina
             self.horas += 0.1
             self.produccion += random.randint(1, 5)
 
+    def reseteo(self):      #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
+        if self.averia:
+            self.averia = False
+            self.estado = "Funcionando"
+            self.temperaturas = 60
+            self.velocidad = 1.5
+        
+            print("----------------------------------")
+            print(Fore.GREEN + "Maquina reiniciada correctamente")
+            print("----------------------------------")
+
 
 
 
 #Maquinas:
-cinta1 = Maquina("cinta1")
+cinta1 = Maquina("Cinta_1, cinta1")
 
 #Recepcion de comandos por mqtt
 def recibir_comando(cliente, userdata, msg):
@@ -62,22 +74,14 @@ def recibir_comando(cliente, userdata, msg):
     comando = msg.payload.decode()
     print(f"Comando recibido: {comando}")
 
-    if comando == "RESET" and cinta1.averia:    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
-        cinta1.averia = False
-        cinta1.estado = "Funcionando"
-        cinta1.temperaturas = 60.0
-        cinta1.velocidad = 1.5
-
-        print("----------------------------------")
-        print(Fore.GREEN + "Maquina reiniciada correctamente")
-        print("----------------------------------")
-
+    if comando == "RESET":    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
+        cinta1.reseteo()
 
 #creacion de cliente
 cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 cliente.on_message = recibir_comando
 cliente.connect("localhost", 1883, 60)
-cliente.subscribe("smartfactory/cinta1/comandos")
+cliente.subscribe("smartfactory/{cinta1.identificador}/comandos")
 cliente.loop_start()
 
 #Inicio
@@ -120,7 +124,7 @@ while True:
 
         #Se publica el json
         cliente.publish(
-            "smartfactory/cinta1/telemetria",
+            "smartfactory/{cinta1.identificador}/telemetria",
             mensaje_json
         )
 
