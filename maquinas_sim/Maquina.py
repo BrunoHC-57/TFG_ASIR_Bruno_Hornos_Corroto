@@ -9,28 +9,64 @@ from colorama import Fore, Style, init
 init(autoreset=True)
 
 #Datos
-nombre = "Cinta_1"
-estado = "Funcionando"
-temperaturas = 60.0
-velocidad = 1.5
-horas = 124.0
-produccion = 0
-averia = False
+class Maquina:          #Clase que representa la maquina
+
+    def __init__(self,nombre):
+        self.nombre = "Cinta_1"
+        self.estado = "Funcionando"
+        self.temperaturas = 60.0
+        self.velocidad = 1.5
+        self.horas = 124.0
+        self.produccion = 0
+        self.averia = False
+
+    def temp_comp(self):
+        if self.temperaturas > 80:
+            self.estado = "ERROR"
+            self.velocidad = 0
+            #Aviso de averia
+            self.averia = True       
+            # msg de alerta de fallo
+            #print()
+            #print(Fore.RED + "======================================================")
+            #print(Fore.YELLOW + f"⚠ AVERIA DETECTADA EN {cinta1.nombre}")
+            #print("Motivo: SOBRECALENTAMIENTO")
+            #print(f"Temperatura: {cinta1.temperaturas:.1f} ºC")
+            #print("Maquina detenida por seguridad")
+            #print("Esperando intervencion del tecnico...")
+            #print(Fore.RED + "======================================================")
+        elif self.temperaturas > 70:
+            self.estado = "WARNING"
+        else:
+            self.estado = "Funcionando"
+
+    def parada_emergencia(self):
+        
+        #Parada de emergencia si hay error si no funciona con normalidad.
+        if self.estado == "ERROR":
+            self.velocidad = 0
+        else:
+            self.velocidad += random.uniform(-0.05, 0.05)
+            self.horas += 0.1
+            self.produccion += random.randint(1, 5)
+
+
+
+
+#Maquinas:
+cinta1 = Maquina("cinta1")
 
 #Recepcion de comandos por mqtt
 def recibir_comando(cliente, userdata, msg):
-    #avilita modificar variables fuera de la funcion
-    global averia, estado, temperaturas, velocidad
-
     #decodificacion de que comando entra 
     comando = msg.payload.decode()
     print(f"Comando recibido: {comando}")
 
-    if comando == "RESET" and averia:    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
-        averia = False
-        estado = "Funcionando"
-        temperaturas = 60.0
-        velocidad = 1.5
+    if comando == "RESET" and cinta1.averia:    #docker exec -it smartfactory-mqtt mosquitto_pub -h localhost -t "smartfactory/cinta1/comandos" -m "RESET"
+        cinta1.averia = False
+        cinta1.estado = "Funcionando"
+        cinta1.temperaturas = 60.0
+        cinta1.velocidad = 1.5
 
         print("----------------------------------")
         print(Fore.GREEN + "Maquina reiniciada correctamente")
@@ -47,60 +83,36 @@ cliente.loop_start()
 #Inicio
 
 print(Fore.GREEN + "-----------------------------------------")
-print(Fore.GREEN + f"iniciando simulacion de: ", nombre)
+print(Fore.GREEN + f"iniciando simulacion de: ", cinta1.nombre)
 print(Fore.GREEN + "-----------------------------------------")
 
 #bucle para que varien automaticamente los parametros de funcionamiento de la maquina para simular un funcionamiento real que pueda dar fallos.
 while True:
     #Control de averia
-    if not averia:
-        temperaturas += random.uniform(-1, 2)  
+    if not cinta1.averia:
+        cinta1.temperaturas += random.uniform(-1, 2)  
 
-        #Control de temperatura
-        if temperaturas > 80:
-            estado = "ERROR"
-            velocidad = 0
-            #Aviso de averia
-            averia = True
-            
-            # msg de alerta de fallo
-            print()
-            print(Fore.RED + "======================================================")
-            print(Fore.YELLOW + f"⚠ AVERIA DETECTADA EN {nombre}")
-            print("Motivo: SOBRECALENTAMIENTO")
-            print(f"Temperatura: {temperaturas:.1f} ºC")
-            print("Maquina detenida por seguridad")
-            print("Esperando intervencion del tecnico...")
-            print(Fore.RED + "======================================================")
-        elif temperaturas > 70:
-            estado = "WARNING"
-        else:
-            estado = "Funcionando"
+        cinta1.temp_comp()
 
-        #Parada de emergencia si hay error si no funciona con normalidad.
-        if estado == "ERROR":
-            velocidad = 0
-        else:
-            velocidad += random.uniform(-0.05, 0.05)
-            horas += 0.1
-            produccion += random.randint(1, 5)
+        cinta1.parada_emergencia()
 
         #Cambio de color segun el estado de la maquina
-        if estado == "Funcionando":
+
+        if cinta1.estado == "Funcionando":
             color_estado = Fore.GREEN
-        elif estado == "WARNING":
+        elif cinta1.estado == "WARNING":
             color_estado = Fore.YELLOW
         else:
             color_estado = Fore.RED
 
         #Guardado de datos 
         datos = {
-            "Nombre": nombre,
-            "Estado": estado,
-            "Temperatura": round(temperaturas, 1),
-            "Velocidad": round(velocidad, 2),
-            "Horas": round(horas, 1),
-            "Produccion": produccion
+            "Nombre": cinta1.nombre,
+            "Estado": cinta1.estado,
+            "Temperatura": round(cinta1.temperaturas, 1),
+            "Velocidad": round(cinta1.velocidad, 2),
+            "Horas": round(cinta1.horas, 1),
+            "Produccion": cinta1.produccion
         }
 
         #Se pasa a json
@@ -113,12 +125,12 @@ while True:
         )
 
         print(
-            f"{nombre} | "
-            f"{color_estado}{estado}{Style.RESET_ALL} | "
-            f"Temperatura: {temperaturas:.1f} ºC | "
-            f"Velocidad: {velocidad:.2f} m/s | "
-            f"Horas: {horas:.1f} | "
-            f"Produccion: {produccion} | "
+            f"{cinta1.nombre} | "
+            f"{color_estado}{cinta1.estado}{Style.RESET_ALL} | "
+            f"Temperatura: {cinta1.temperaturas:.1f} ºC | "
+            f"Velocidad: {cinta1.velocidad:.2f} m/s | "
+            f"Horas: {cinta1.horas:.1f} | "
+            f"Produccion: {cinta1.produccion} | "
         )
 
     time.sleep(2)
