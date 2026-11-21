@@ -1,6 +1,7 @@
 # Credenciales y configuracion privada
 .env
 .env.*
+mqtt/passwords.txt
 
 # Archivos temporales de Python
 __pycache__/

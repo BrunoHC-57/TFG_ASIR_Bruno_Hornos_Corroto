@@ -14,9 +14,17 @@ token = os.getenv("INFLUXDB_TOKEN")
 organizacion = os.getenv("INFLUXDB_ORG")
 bucket = os.getenv("INFLUXDB_BUCKET")
 
+# Datos de autenticacion MQTT
+mqtt_usuario = os.getenv("MQTT_USUARIO")
+mqtt_password = os.getenv("MQTT_PASSWORD")
+
 # Comprobar que tenemos la configuracion
 if not all([url, token, organizacion, bucket]):
     raise ValueError("Faltan datos de configuracion en .env")
+
+# Comprobar credenciales MQTT
+if not all([mqtt_usuario, mqtt_password]):
+    raise ValueError("Faltan credenciales MQTT en .env")
 
 # Conectar con InfluxDB
 influx = InfluxDBClient(
@@ -59,6 +67,10 @@ def recibir_telemetria(cliente, userdata, msg):
 
 # Crear cliente MQTT
 cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
+# Autenticacion con Mosquitto
+cliente.username_pw_set(mqtt_usuario, mqtt_password)
+
 cliente.on_message = recibir_telemetria
 
 cliente.connect("localhost", 1883, 60)

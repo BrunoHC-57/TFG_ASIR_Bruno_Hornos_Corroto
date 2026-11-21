@@ -7,6 +7,7 @@ services:
       - "1883:1883"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mqtt/passwords.txt:/mosquitto/config/passwords.txt:ro
     restart: unless-stopped
 
   influxdb:
