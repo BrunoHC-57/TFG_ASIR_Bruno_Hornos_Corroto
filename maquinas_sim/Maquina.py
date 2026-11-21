@@ -96,57 +96,63 @@ cliente.subscribe(f"smartfactory/+/comandos")
 cliente.loop_start()
 
 #Inicio
+print(Fore.GREEN + "-----------------------------------------")
+print(Fore.GREEN + "Iniciando simulacion de maquinas:")
+print(Fore.GREEN + "-----------------------------------------")
+
+for maquina in maquinas.values():
+    print(Fore.GREEN + f"  - {maquina.nombre}")
 
 print(Fore.GREEN + "-----------------------------------------")
-print(Fore.GREEN + f"iniciando simulacion de: ", cinta1.nombre)
+print(Fore.GREEN + f"Total de maquinas iniciadas: {len(maquinas)}")
 print(Fore.GREEN + "-----------------------------------------")
 
 #bucle para que varien automaticamente los parametros de funcionamiento de la maquina para simular un funcionamiento real que pueda dar fallos.
 while True:
     for maquina in maquinas.values():
-        #Control de averia
+
+        # Solo simular funcionamiento si no hay averia
         if not maquina.averia:
-            maquina.temperaturas += random.uniform(-1, 2)  
+            maquina.temperaturas += random.uniform(-1, 2)
 
             maquina.temp_comp()
-
             maquina.parada_emergencia()
 
-            #Cambio de color segun el estado de la maquina
+        # Cambio de color segun el estado
+        if maquina.estado == "Funcionando":
+            color_estado = Fore.GREEN
+        elif maquina.estado == "WARNING":
+            color_estado = Fore.YELLOW
+        else:
+            color_estado = Fore.RED
 
-            if maquina.estado == "Funcionando":
-                color_estado = Fore.GREEN
-            elif maquina.estado == "WARNING":
-                color_estado = Fore.YELLOW
-            else:
-                color_estado = Fore.RED
+        # Guardado de datos
+        datos = {
+            "Nombre": maquina.nombre,
+            "Estado": maquina.estado,
+            "Temperatura": round(maquina.temperaturas, 1),
+            "Velocidad": round(maquina.velocidad, 2),
+            "Horas": round(maquina.horas, 1),
+            "Produccion": maquina.produccion
+        }
 
-        #Guardado de datos 
-            datos = {
-                "Nombre": maquina.nombre,
-                "Estado": maquina.estado,
-                "Temperatura": round(maquina.temperaturas, 1),
-                "Velocidad": round(maquina.velocidad, 2),
-                "Horas": round(maquina.horas, 1),
-                "Produccion": maquina.produccion
-            }
+        # Convertir a JSON
+        mensaje_json = json.dumps(datos)
 
-            #Se pasa a json
-            mensaje_json = json.dumps(datos)
+        # Publicar telemetria incluso si hay averia
+        cliente.publish(
+            f"smartfactory/{maquina.identificador}/telemetria",
+            mensaje_json
+        )
 
-            #Se publica el json
-            cliente.publish(
-                f"smartfactory/{maquina.identificador}/telemetria",
-                mensaje_json
-            )
+        print(
+            f"{maquina.nombre} | "
+            f"{color_estado}{maquina.estado}{Style.RESET_ALL} | "
+            f"Temperatura: {maquina.temperaturas:.1f} ºC | "
+            f"Velocidad: {maquina.velocidad:.2f} m/s | "
+            f"Horas: {maquina.horas:.1f} | "
+            f"Produccion: {maquina.produccion} | "
+        )
 
-            print(
-                f"{maquina.nombre} | "
-                f"{color_estado}{maquina.estado}{Style.RESET_ALL} | "
-                f"Temperatura: {maquina.temperaturas:.1f} ºC | "
-                f"Velocidad: {maquina.velocidad:.2f} m/s | "
-                f"Horas: {maquina.horas:.1f} | "
-                f"Produccion: {maquina.produccion} | "
-            )
-
+    time.sleep(2)
     time.sleep(2)
