@@ -9,6 +9,7 @@ import paho.mqtt.client as mqtt
 # Cargar credenciales desde el archivo .env
 ruta_env = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(ruta_env)
+mqtt_host = os.getenv("MQTT_HOST", "localhost")
 
 mqtt_usuario = os.getenv("MQTT_USUARIO")
 mqtt_password = os.getenv("MQTT_PASSWORD")
@@ -104,7 +105,7 @@ cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 cliente.username_pw_set(mqtt_usuario, mqtt_password)
 
 cliente.on_message = recibir_comando
-cliente.connect("localhost", 1883, 60)
+cliente.connect(mqtt_host, 1883, 60)
 cliente.subscribe(f"smartfactory/+/comandos")
 cliente.loop_start()
 

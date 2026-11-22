@@ -1,5 +1,4 @@
 services:
-
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: smartfactory-mqtt
@@ -43,6 +42,18 @@ services:
     depends_on:
       - mosquitto
       - influxdb
+    restart: unless-stopped
+
+  simulador:
+    build: ./maquinas_sim
+    container_name: smartfactory-simulador
+    env_file:
+      - .env
+    environment:
+      MQTT_HOST: mosquitto
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      - mosquitto
     restart: unless-stopped
 
 volumes:
