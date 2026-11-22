@@ -65,6 +65,21 @@ def recibir_telemetria(cliente, userdata, msg):
     except Exception as error:
         print(f"Error procesando telemetria: {error}")
 
+# Se ejecuta al conectar o reconectar con Mosquitto
+def al_conectar(cliente, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print("Conectado a Mosquitto", flush=True)
+
+        cliente.subscribe("smartfactory/+/telemetria")
+
+        print("Suscrito a telemetria de maquinas", flush=True)
+    else:
+        print(f"Error de conexion MQTT: {reason_code}", flush=True)
+
+
+# Se ejecuta cuando se pierde la conexion MQTT
+def al_desconectar(cliente, userdata, disconnect_flags, reason_code, properties):
+    print(f"Desconexion MQTT detectada: {reason_code}", flush=True)
 
 # Crear cliente MQTT
 cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -72,18 +87,26 @@ cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 # Autenticacion con Mosquitto
 cliente.username_pw_set(mqtt_usuario, mqtt_password)
 
+# Configurar funciones de conexion, desconexion y recepcion
+cliente.on_connect = al_conectar
+cliente.on_disconnect = al_desconectar
 cliente.on_message = recibir_telemetria
 
-cliente.connect(mqtt_host, 1883, 60)
-cliente.subscribe("smartfactory/+/telemetria")
+# Configurar intentos de reconexion automatica
+cliente.reconnect_delay_set(min_delay=1, max_delay=30)
 
-print("Receptor MQTT iniciado. Esperando datos...")
+# Conectar con Mosquitto
+cliente.connect(mqtt_host, 1883, 60)
+
+print("Receptor MQTT iniciado. Esperando datos...", flush=True)
 
 # Mantener el receptor escuchando
 try:
     cliente.loop_forever()
+
 except KeyboardInterrupt:
     print("Receptor detenido")
+
 finally:
     escritura.close()
     influx.close()
