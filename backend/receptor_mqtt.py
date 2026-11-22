@@ -7,6 +7,7 @@ from influxdb_client import InfluxDBClient, Point
 
 # Cargar configuracion del archivo .env
 load_dotenv()
+mqtt_host = os.getenv("MQTT_HOST", "localhost")
 
 # Datos de conexion con InfluxDB
 url = os.getenv("INFLUXDB_URL")
@@ -73,7 +74,7 @@ cliente.username_pw_set(mqtt_usuario, mqtt_password)
 
 cliente.on_message = recibir_telemetria
 
-cliente.connect("localhost", 1883, 60)
+cliente.connect(mqtt_host, 1883, 60)
 cliente.subscribe("smartfactory/+/telemetria")
 
 print("Receptor MQTT iniciado. Esperando datos...")
