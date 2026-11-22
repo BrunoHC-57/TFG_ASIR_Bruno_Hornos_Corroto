@@ -10,3 +10,6 @@ __pycache__/
 # Entornos virtuales
 .venv/
 venv/
+
+# Copias de seguridad locales
+backups/
